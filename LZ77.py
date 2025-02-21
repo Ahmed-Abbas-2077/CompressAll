@@ -1,86 +1,105 @@
 
 
-# This is a function for encoding the first letters in the sequence (window_len)
-def encoder(sequence: str, tag_list: list[tuple], search_len: int, look_ahead_len: int):
-    """
-        Some terminology before we proceed ahead
+class LZ77:
 
-        sequence: Initial search buffer to be built. Acts as a look-ahead for now.
-        temp_win: an empty list at first, but builds up as we move through initial window
-    """
+    # This is a function for encoding the first letters in the sequence (window_len)
+    def encoder(sequence: str, tag_list: list[tuple], search_len: int, look_ahead_len: int) -> None:
+        """
+            Some terminology before we proceed ahead
 
-    search_start = 0
-    look_ahead_start = 0
-    # while look_ahead_start < search_start + search_len:
-    # ----temp_win = []
-    # ----(matching position (relative to window), length of the matching)
-    matchings = []
-    while look_ahead_start < len(sequence):
-        print("\n---------------------------")
-        # printing the look-ahead buffer
-        print("look-ahead buffer from", look_ahead_start,
-              "to", look_ahead_start+look_ahead_len, "\n[", end="")
-        for i in range(look_ahead_start, min(look_ahead_start+look_ahead_len, len(sequence))):
-            print(sequence[i], end="")
-        print("]")
-        # end of printing
+            sequence: Initial search buffer to be built. Acts as a look-ahead for now.
+            temp_win: an empty list at first, but builds up as we move through initial window
+        """
 
-        # printing search buffer
-        print("\nsearch buffer from", search_start,
-              "to", look_ahead_start, "\n[", end="")
-        for i in range(search_start, look_ahead_start):
-            print(sequence[i], end="")
-        print("]")
+        search_start = 0
+        look_ahead_start = 0
+        # while look_ahead_start < search_start + search_len:
+        # ----temp_win = []
+        # ----(matching position (relative to window), length of the matching)
+        while look_ahead_start < len(sequence):
+            # we should be storing matchings of a single look-ahead instance in here
+            # it was originally outside the while loop... A Huge Mistake It Was!
+            matchings = []
 
-        for j in range(search_start, look_ahead_start):
-            if sequence[look_ahead_start] == sequence[j]:
-                print("Matching Positions:")
-                print("LA:", look_ahead_start, "SB:", j)
-                look_pos = look_ahead_start  # matching position at the buffer
-                srch_pos = j  # matching position at the window
-                matching_length = 0
-                look_ahead_limit = min(
-                    len(sequence), look_ahead_start + look_ahead_len)
-                while ((look_pos < look_ahead_limit) and (sequence[look_pos] == sequence[srch_pos])):
-                    matching_length += 1
-                    look_pos += 1
-                    srch_pos += 1
+            print("\n---------------------------")
+            # printing the look-ahead buffer
+            print("look-ahead buffer from", look_ahead_start,
+                  "to", look_ahead_start+look_ahead_len, "\n[", end="")
+            for i in range(look_ahead_start, min(look_ahead_start+look_ahead_len, len(sequence))):
+                print(sequence[i], end="")
+            print("]")
+            # end of printing
 
-                print("\nMatch(o,l):", (look_ahead_start -
-                      j, matching_length), "\n [", end="")
-                for k in range(j, j+matching_length):
-                    print(sequence[k], end="")
-                print("]\n")
-                # [abbaababa]|abaabbbb|
-                matchings.append((look_ahead_start-j, matching_length))
-                # j = srch_pos-1
+            # printing search buffer
+            print("\nsearch buffer from", search_start,
+                  "to", look_ahead_start, "\n[", end="")
+            for i in range(search_start, look_ahead_start):
+                print(sequence[i], end="")
+            print("]")
 
-                print("look_pos:", look_pos)
-                print("srch_pos:", srch_pos)
+            for j in range(search_start, look_ahead_start):
+                if sequence[look_ahead_start] == sequence[j]:
+                    print("Matching Positions:")
+                    print("LA:", look_ahead_start, "SB:", j)
+                    look_pos = look_ahead_start  # matching position at the buffer
+                    srch_pos = j  # matching position at the window
+                    matching_length = 0
+                    look_ahead_limit = min(
+                        len(sequence), look_ahead_start + look_ahead_len)
+                    while ((look_pos < look_ahead_limit) and (sequence[look_pos] == sequence[srch_pos])):
+                        matching_length += 1
+                        look_pos += 1
+                        srch_pos += 1
 
-        # Looking for the longest matching
-        longest_match = max(matchings, key=lambda x: x[1], default=None)
-        if not longest_match:
-            tag_list.append((0, 0, sequence[look_ahead_start]))
-            if (look_ahead_start-search_start) > search_len:
-                search_start += 1
-            if (look_ahead_start+1) < len(sequence):
-                look_ahead_start += 1
+                    print("\nMatch(o,l):", (look_ahead_start -
+                                            j, matching_length), "\n [", end="")
+                    for k in range(j, j+matching_length):
+                        print(sequence[k], end="")
+                    print("]\n")
+                    # [abbaababa]|abaabbbb|
+                    matchings.append((look_ahead_start-j, matching_length))
+                    # j = srch_pos-1
+
+                    print("look_pos:", look_pos)
+                    print("srch_pos:", srch_pos)
+
+            # Looking for the longest matching
+            longest_match = max(matchings, key=lambda x: x[1], default=None)
+            if not longest_match:
+                tag_list.append((0, 0, sequence[look_ahead_start]))
+                if (look_ahead_start-search_start) > search_len:
+                    search_start += 1
+                if (look_ahead_start+1) <= len(sequence):
+                    look_ahead_start += 1
+                else:
+                    break
+                print(tag_list[len(tag_list)-1])
             else:
-                break
-            print(tag_list[len(tag_list)-1])
-        else:
-            offset = longest_match[0]
-            length = longest_match[1]
-            next_char_pos = look_ahead_start + length
-            if next_char_pos >= len(sequence):
-                tag_list.append((offset, length, None))
-            else:
-                tag_list.append((offset, length, sequence[next_char_pos]))
-            if (look_ahead_start-search_start) > search_len:
-                search_start += length + 1
-            if (look_ahead_start+length+1) < len(sequence):
-                look_ahead_start += length + 1
-            else:
-                break
-            print(tag_list[len(tag_list)-1])
+                offset = longest_match[0]
+                length = longest_match[1]
+                next_char_pos = look_ahead_start + length
+                if next_char_pos >= len(sequence):
+                    tag_list.append((offset, length, ""))
+                else:
+                    tag_list.append((offset, length, sequence[next_char_pos]))
+                if (look_ahead_start-search_start) > search_len:
+                    search_start += length + 1
+                if (look_ahead_start+length+1) <= len(sequence):
+                    look_ahead_start += length + 1
+                else:
+                    break
+                print(tag_list[len(tag_list)-1])
+
+    def decoder(tag_list: list[tuple]) -> str:
+        decoded = []
+        for tag in tag_list:
+            start = len(decoded) - tag[0]
+            length = tag[1]
+            for i in range(start, start+length):
+                decoded.append(decoded[i])
+            decoded.append(tag[2])
+        if decoded[len(decoded)-1] == None:
+            decoded = decoded[:len(decoded)-1]
+        print(decoded)
+        sequence = ''.join(decoded)
+        return sequence
