@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class LZ77{
@@ -64,10 +66,14 @@ public class LZ77{
             String line = reader.nextLine();
             ArrayList<String> tags_txt = new ArrayList<>(Arrays.asList(line.split(":")));
             for (String tag : tags_txt) {
-                int first = Integer.parseInt(tag.substring(1, 2));
-                int second = Integer.parseInt(tag.substring(3, 4));
-                char third = tag.charAt(5);
-                tags.add(new Tuple(first, second, third));
+                Pattern pattern = Pattern.compile("\\((\\d+),(\\d+),([A-Za-z ])\\)");
+                Matcher matcher = pattern.matcher(tag);                
+                if (matcher.find()) {
+                    int first = Integer.parseInt(matcher.group(1));
+                    int second = Integer.parseInt(matcher.group(2));
+                    char third = matcher.group(3).charAt(0);
+                    tags.add(new Tuple(first, second, third));
+                }
             }
         }
         reader.close();
@@ -83,7 +89,7 @@ public class LZ77{
         FileWriter writer = new FileWriter(file_name);
         StringBuilder text_tags = new StringBuilder();
         for(Integer i=0; i<tags.size(); i++){
-            String line = "(" + tags.get(i).first + "," + tags.get(i).second + "," + tags.get(i).third + "):";
+            String line = "(" + tags.get(i).first + "," + tags.get(i).second + "," + tags.get(i).third + ")";
             text_tags.append(line);
             if (i<tags.size()-1){
                 text_tags.append(":");
