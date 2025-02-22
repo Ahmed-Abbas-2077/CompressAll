@@ -113,7 +113,7 @@ class LZ77:
                     break
                 print(tag_list[len(tag_list)-1])
 
-    def decoder(tag_list: list[tuple]) -> str:
+    def decoder(file_name: str, tag_list: list[tuple]) -> bool:
         decoded = []
         for tag in tag_list:
             start = len(decoded) - tag[0]
@@ -125,4 +125,4 @@ class LZ77:
             decoded = decoded[:len(decoded)-1]
         print(decoded)
         sequence = ''.join(decoded)
-        return sequence
+        return self.write_file(file_name, sequence)
