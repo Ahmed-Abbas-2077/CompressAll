@@ -43,8 +43,15 @@ class LZ77:
         with open(file_name, 'r') as file:
             tags_txt = file.read().split(":")
             print("Tags:\n", tags_txt)
-            tags = [(int(tag[1]), int(tag[3]), tag[5]) if tag[5] != ")" else (
-                int(tag[1]), int(tag[3]), '') for tag in tags_txt]
+            tags = []
+            try:
+                for tag in tags_txt:
+                    print("tag:\n", tag)
+                    tup_tag = (int(tag[1]), int(tag[3]), tag[5]) if tag[5] != ")" else (
+                        int(tag[1]), int(tag[3]), '')
+                    tags.append(tup_tag)
+            except:
+                print("tags:\n", tags)
             return tags
         return None
 
