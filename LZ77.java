@@ -174,8 +174,23 @@ public class LZ77{
         write_tags(write_file, tag_list);
     }
 
-    
+    public static Boolean decoder(String read_file, String write_file) throws IOException, IllegalArgumentException {
+        ArrayList<Tuple> tag_list = read_tags(read_file);
+        StringBuilder decoded = new StringBuilder();
 
-
+        for (Tuple tag : tag_list)
+        {
+            Integer start = decoded.length() - tag.first;
+            Integer length = tag.second;
+            for (int i=start; i<(start+length); i++){
+                decoded.append(decoded.charAt(i));
+            }
+            decoded.append(tag.third);
+        }
+        if (decoded.charAt(decoded.length()-1) == ' '){
+            decoded.deleteCharAt(decoded.length()-1);
+        }
+        return write_txt(write_file, decoded.toString());
+    }
 }
 
