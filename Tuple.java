@@ -8,4 +8,8 @@ public class Tuple{
         this.second = second;
         this.third = third;
     }
+
+    public Tuple(Integer first, Integer second) {
+        this(first, second, ' ');
+    }
 }
