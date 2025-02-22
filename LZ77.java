@@ -75,6 +75,25 @@ public class LZ77{
         return tags;
     }
 
+    public static Boolean write_tags(String file_name, ArrayList<Tuple> tags) throws IOException, IllegalArgumentException {
+        if (validate_input(file_name) != 2) {
+            throw new IllegalArgumentException("The output file must be decompressible (ends with dcmp.txt)");
+        }
+
+        FileWriter writer = new FileWriter(file_name);
+        StringBuilder text_tags = new StringBuilder();
+        for(Integer i=0; i<tags.size(); i++){
+            String line = "(" + tags.get(i).first + "," + tags.get(i).second + "," + tags.get(i).third + "):";
+            text_tags.append(line);
+            if (i<tags.size()-1){
+                text_tags.append(":");
+            }
+        }
+        writer.write(text_tags.toString());
+        writer.close();
+        return true;
+    }
+
 
 }
 
