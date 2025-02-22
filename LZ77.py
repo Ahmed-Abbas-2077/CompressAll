@@ -2,15 +2,27 @@
 
 class LZ77:
 
+    def read_file(file_name: str) -> str:
+        extracted = ""
+        with open(file_name, 'r') as file:
+            extracted = file.read()
+        return extracted
+
+    def write_file(file_name: str, decoded: str) -> bool:
+        with open(file_name, 'w') as file:
+            file.write(decoded)
+            return True
+        return False
+
     # This is a function for encoding the first letters in the sequence (window_len)
-    def encoder(sequence: str, tag_list: list[tuple], search_len: int, look_ahead_len: int) -> None:
+    def encoder(file_name: str, tag_list: list[tuple], search_len: int, look_ahead_len: int) -> None:
         """
             Some terminology before we proceed ahead
 
             sequence: Initial search buffer to be built. Acts as a look-ahead for now.
             temp_win: an empty list at first, but builds up as we move through initial window
         """
-
+        sequence = self.read_file(file_name)
         search_start = 0
         look_ahead_start = 0
         # while look_ahead_start < search_start + search_len:
@@ -82,6 +94,17 @@ class LZ77:
                     tag_list.append((offset, length, ""))
                 else:
                     tag_list.append((offset, length, sequence[next_char_pos]))
+
+                # there is a minor issue with this logic:
+                # it is possible that the de facto size
+                # of the search buffer is increased than
+                # what was originally intended (search_len).
+                # If the de facto search size is still behind
+                # search_len, then the look-ahead might increment
+                # without incrementing the search_start, causing
+                # the search buffer size to unintentionally expand.
+                # Although it is a minor pet peeve, it's still
+                # worth pointing out.
                 if (look_ahead_start-search_start) > search_len:
                     search_start += length + 1
                 if (look_ahead_start+length+1) <= len(sequence):
