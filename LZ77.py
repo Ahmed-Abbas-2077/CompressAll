@@ -2,27 +2,78 @@
 
 class LZ77:
 
-    def read_file(file_name: str) -> str:
+    @staticmethod
+    def validate_input(file_name: str) -> int:
+        # validates file name
+        if file_name.endswith("dcmp.txt"):
+            return 2
+        elif file_name.endswith("cmp.txt"):
+            return 1
+        else:
+            return 0
+
+    @staticmethod
+    def read_txt(file_name: str) -> str:
+        if LZ77.validate_input(file_name) != 1:
+            raise ValueError(
+                "The input file must be compressible (ends with cmp.txt)")
         extracted = ""
         with open(file_name, 'r') as file:
             extracted = file.read()
         return extracted
 
-    def write_file(file_name: str, decoded: str) -> bool:
+    @staticmethod
+    def write_txt(file_name: str, decoded: str) -> bool:
+        if LZ77.validate_input(file_name) != 1:
+            raise ValueError(
+                "The input file must be compressible (ends with cmp.txt)")
+
         with open(file_name, 'w') as file:
             file.write(decoded)
             return True
         return False
 
+    @staticmethod
+    def read_tags(file_name: str) -> list[tuple]:
+        if LZ77.validate_input(file_name) != 2:
+            raise ValueError(
+                "The input file must be decompressible (ends with dcmp.txt)")
+
+        # we will assume that tags are split by :
+        with open(file_name, 'r') as file:
+            tags_txt = file.read().split(":")
+            print("Tags:\n", tags_txt)
+            tags = [(int(tag[1]), int(tag[3]), tag[5]) if tag[5] != ")" else (
+                int(tag[1]), int(tag[3]), '') for tag in tags_txt]
+            return tags
+        return None
+
+    @staticmethod
+    def write_tags(file_name: str, tags: list[tuple]) -> bool:
+        if LZ77.validate_input(file_name) != 2:
+            raise ValueError(
+                "The input file must be decompressible (ends with dcmp.txt)")
+        with open(file_name, 'w') as file:
+            tag_list = [
+                f"({tag[0]},{tag[1]},{tag[2] if tag[2] != '' else ''})" for tag in tags]
+            text = ":".join(tag_list)
+            file.write(text)
+            return True
+        return False
+
     # This is a function for encoding the first letters in the sequence (window_len)
-    def encoder(file_name: str, tag_list: list[tuple], search_len: int, look_ahead_len: int) -> None:
+    @staticmethod
+    def encoder(read_file: str, write_file: str, search_len: int, look_ahead_len: int) -> None:
         """
             Some terminology before we proceed ahead
 
             sequence: Initial search buffer to be built. Acts as a look-ahead for now.
             temp_win: an empty list at first, but builds up as we move through initial window
         """
-        sequence = self.read_file(file_name)
+
+        tag_list = []
+
+        sequence = LZ77.read_txt(read_file)
         search_start = 0
         look_ahead_start = 0
         # while look_ahead_start < search_start + search_len:
@@ -91,7 +142,7 @@ class LZ77:
                 length = longest_match[1]
                 next_char_pos = look_ahead_start + length
                 if next_char_pos >= len(sequence):
-                    tag_list.append((offset, length, ""))
+                    tag_list.append((offset, length, ''))
                 else:
                     tag_list.append((offset, length, sequence[next_char_pos]))
 
@@ -112,8 +163,11 @@ class LZ77:
                 else:
                     break
                 print(tag_list[len(tag_list)-1])
+        LZ77.write_tags(write_file, tag_list)
 
-    def decoder(file_name: str, tag_list: list[tuple]) -> bool:
+    @staticmethod
+    def decoder(read_file: str, write_file: str) -> bool:
+        tag_list = LZ77.read_tags(read_file)
         decoded = []
         for tag in tag_list:
             start = len(decoded) - tag[0]
@@ -125,4 +179,4 @@ class LZ77:
             decoded = decoded[:len(decoded)-1]
         print(decoded)
         sequence = ''.join(decoded)
-        return self.write_file(file_name, sequence)
+        return LZ77.write_txt(write_file, sequence)
