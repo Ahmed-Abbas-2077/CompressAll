@@ -60,9 +60,12 @@ public class SHuff {
 
         // calculating entropy in an iterative fashion
         for (int freq : freqMap.values()){
-            double prob = (double) freq/totalLength; 
-
+            double prob = (double) freq/totalLength;
+            double log_prob = Math.log(prob) / Math.log(2); // bits, nats, hartleys are all welcome!
+            H -= prob * log_prob;
         } 
+        
+        return H;
     }
 
 }
