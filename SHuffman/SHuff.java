@@ -16,9 +16,18 @@ public class SHuff {
         }
     }
 
+    public static byte[] read_binary(String bin_file){
+        try {
+            return Files.readAllBytes(Paths.get(bin_file));
+        } catch (IOException e){
+            System.err.println("Error reading bin file: " + e.getMessage());
+            return new byte[0];
+        }
+    }
+
 
     public static void write_txt (String bin_file){
-
+        
     }
 
 }
