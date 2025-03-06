@@ -142,6 +142,13 @@ public class LZ78 {
                 bits.set(bitPos++, ((tag.c >> i) & 1) == 1);
             }
         } 
+
+        // printing binary code
+        StringBuilder binaryStr = new StringBuilder();
+        for (int i=0; i < bitPos; i++){
+            binaryStr.append(bits.get(i) ? '1' : '0');
+        }
+        System.out.println("Binary Code: " + binaryStr.toString());
         return bits.toByteArray();
     }
 
