@@ -60,4 +60,14 @@ public class Util {
 
         return byteArray;
     }
+
+    public static String textify(byte[] bytes){
+        StringBuilder bin_str = new StringBuilder();
+        for (byte b : bytes){
+            for (int i = 7; i>=0; i--){
+                bin_str.append((b >> i) & 1);
+            }
+        }
+        return bin_str.toString();
+    }
 }
