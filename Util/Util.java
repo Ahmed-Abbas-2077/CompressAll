@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map;
 
 public class Util {
     // Read text file
@@ -70,4 +71,14 @@ public class Util {
         }
         return bin_str.toString();
     }
+
+    public static Character getKeyByValue(Map<Character, String> map, String value) {
+        for (var entry : map.entrySet()) {
+            if (value.equals(entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
 }

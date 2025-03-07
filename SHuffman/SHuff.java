@@ -46,7 +46,9 @@ public class SHuff {
         }
     }
 
-    public static void encoder(String text_file, String bin_file){
+
+
+    public static void encoder(String text_file, String bin_file, Map<Character, String> encoding){
         String sequence = Util.readText(text_file);
         Map<Character, Integer> frequencyMap = getFrequency(sequence);
         PriorityQueue<Node> Q = new PriorityQueue<>();
@@ -71,7 +73,6 @@ public class SHuff {
         }
 
         Node root = Q.poll();
-        Map<Character, String> encoding = new HashMap<>();         
         TraverseEncode(root, encoding, "");
         
         StringBuilder bin_str = new StringBuilder();
@@ -84,5 +85,22 @@ public class SHuff {
         Util.writeBinary(bin_file, bytes);
     }
 
+    public static void decoder(Map<Character, String> encoding, String bin_file, String decoded_file){
+        byte[] bytes = Util.readBinary(bin_file);
+        String bin_str = Util.textify(bytes);
+
+        StringBuilder decoded = new StringBuilder();
+        StringBuilder buffer = new StringBuilder();
+        for (char c : bin_str.toCharArray()){
+            buffer.append(c);
+            Character symbol = Util.getKeyByValue(encoding, buffer.toString());
+            if(symbol != null){
+                decoded.append(symbol);
+                buffer = new StringBuilder();
+            }
+        }
+
+        Util.writeText(decoded_file, decoded.toString());
+    }
 
 }
