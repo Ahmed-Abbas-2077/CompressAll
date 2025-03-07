@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.PriorityQueue;
 
 public class SHuff {
     
@@ -18,6 +19,7 @@ public class SHuff {
             return "";
         }
     }
+
 
     public static byte[] read_binary(String bin_file){
         try {
@@ -39,6 +41,7 @@ public class SHuff {
         }
     }
 
+
     public static void write_binary(String bin_file, byte[] data) {
         try {
             Files.write(Paths.get(bin_file), data);
@@ -57,6 +60,7 @@ public class SHuff {
         return frequencyMap;
     }
 
+
     public static double calculateEntropy(String text){
         Map<Character, Integer> freqMap = getFrequency(text);
         double H = 0; // Entropy
@@ -72,4 +76,45 @@ public class SHuff {
         return H;
     }
 
+
+    public static void TraverseEncode(Node root, Map<Character, String> encoding, String code){
+        if (root == null){
+            return;
+        } else if (root.left == null && root.right == null){
+            encoding.put(root.symbol, code);
+        } else {
+            TraverseEncode(root.left, encoding, code + "0");
+            TraverseEncode(root.right, encoding, code + "1");
+        }
+    }
+
+
+    public static Map<Character, String> encoder(String sequence){
+        Map<Character, Integer> frequencyMap = getFrequency(sequence);
+        PriorityQueue<Node> Q = new PriorityQueue<>();
+        
+
+        // insert elements in Q
+        for (var entry : frequencyMap.entrySet()){
+            char character = entry.getKey();
+            int frequency = entry.getValue();
+            Node node = new Node(character, frequency);
+            Q.offer(node);
+        }
+
+        while (Q.size() > 1){
+            Node left = Q.poll();
+            Node right = Q.poll();
+            int combinedFreq = left.frequency + right.frequency;
+            Node newNode = new Node(' ', combinedFreq);
+            newNode.left = left;
+            newNode.right = right;
+            Q.add(newNode);
+        }
+
+        Node root = Q.poll();
+        Map<Character, String> encoding = new HashMap<>();         
+        TraverseEncode(root, encoding, "");
+        return encoding;
+    }
 }
