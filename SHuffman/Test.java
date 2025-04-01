@@ -1,6 +1,8 @@
 package SHuffman;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 import Util.Util;
 
@@ -20,16 +22,14 @@ public class Test {
         byte[] byted = content.getBytes(StandardCharsets.UTF_8);
         Util.writeBinary(bin_file, byted);
 
-        
+        Map<Character, String> encoding = new HashMap<>();
         // test the encoder function
-        SHuff.encoder(txt_file, bin_file);
+        SHuff.encoder(txt_file, bin_file, encoding);
         
         // test read_binary
         byte[] bin = Util.readBinary(bin_file);
         String bin_str = Util.textify(bin);
         System.out.println("Binary Code: " + bin_str);
-        
-
 
     }
 }
