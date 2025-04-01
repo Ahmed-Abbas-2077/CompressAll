@@ -2,7 +2,7 @@ package AHuffman.src;
 
 
 public class Node {
-    char character;
+    Character character;
     int frequency;
     int number;
     String code;
@@ -10,7 +10,7 @@ public class Node {
     Node parent;
 
     // constructor
-    public Node(char character, int frequency, int number, String code, Node left, Node right, Node parent) {
+    public Node(Character character, int frequency, int number, String code, Node left, Node right, Node parent) {
         this.character = character;
         this.frequency = frequency;
         this.number = number;
@@ -50,7 +50,7 @@ public class Node {
         return frequency;
     }
 
-    public char getCharacter() {
+    public Character getCharacter() {
         return character;
     }
 
