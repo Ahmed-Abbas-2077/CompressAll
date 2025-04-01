@@ -177,10 +177,12 @@ public class HuffmanTree {
     }
 
     public void updateTree(Character character) {
-        Node node = search(root, character);
-
-        if (node == null) {
+        Node node = new Node(null, 0, 0, "", null, null, null);
+        
+        if (encounter.get(character) == null) {
             node = addNew(character);
+        } else {
+            node = search(root, character);
         }
 
         while (node != null) {
