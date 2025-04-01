@@ -23,20 +23,24 @@ public class Node {
 
 
     // util methods
-    Boolean isExternal() {
+    public Boolean isExternal() {
         return (left == null && right == null);
     }
 
-    Boolean isRoot() {
+    public Boolean isRoot() {
         return (parent == null);
     }
 
-    Boolean isRightChild(Node node) {
+    public Boolean isRightChild(Node node) {
         return (this.right == node);
     }
 
-    Boolean isLeftChild(Node node) {
+    public Boolean isLeftChild(Node node) {
         return (this.left == node);
+    }
+
+    public Boolean isParent(Node node) {
+        return (this.parent == node);
     }
 
 
