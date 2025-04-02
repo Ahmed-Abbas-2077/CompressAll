@@ -43,6 +43,23 @@ public class HuffmanTree {
         return search(node.right, character);
     }
 
+    Node searchCode(Node node, String code) {
+        if (node == null) {
+            return null;
+        }
+        if (code.equals("")) {
+            return node; // return the root node if code is empty
+        }
+
+        if (code.charAt(0) == '0') {
+            return searchCode(node.left, code.substring(1)); // go left
+        } else if (code.charAt(0) == '1') {
+            return searchCode(node.right, code.substring(1)); // go right
+        } else {
+            return null; // invalid code
+        }
+    }
+
     
     Node addNew(Character character) {
         System.out.println("\nCurrent NYT node: " + NYT.code);
@@ -50,7 +67,7 @@ public class HuffmanTree {
         NYT.right = new Node(character, 0, NYT.number - 1, NYT.code + "1", null, null, NYT);
         NYT.left = new Node(null, 0, NYT.number - 2, NYT.code + "0", null, null, NYT);
         this.encounter.put(character, true); // mark character as encountered
-        this.size++;
+        this.size += 2; // increase size of the tree by 2
         System.out.println("Adding new character: " + character + " with code: " + NYT.right.code);
         this.NYT = NYT.left;
         System.out.println("New NYT node: " + NYT.code);

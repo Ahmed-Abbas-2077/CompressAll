@@ -12,6 +12,14 @@ public class Test {
         } else {
             System.out.println("Encoder test failed.");
         }
+
+        flag = testDecoder("test/test.bin", "test/test_decoded.txt", Util.getVocab(Util.readText("test/test.txt")));
+        if (flag) {
+            System.out.println("Decoder test passed.");
+        } else {
+            System.out.println("Decoder test failed.");
+        }
+
     }
 
     static void testHuffmanTree() {
@@ -59,7 +67,7 @@ public class Test {
         }
         System.out.println("Text read from file: " + text);
 
-        Map<Character, String> vocab = encoder.getVocab(text);
+        Map<Character, String> vocab = Util.getVocab(text);
         System.out.println("Vocabulary: ");
         for (Map.Entry<Character, String> entry : vocab.entrySet()) {
             System.out.println(entry.getKey() + ": " + entry.getValue());
@@ -74,6 +82,22 @@ public class Test {
             System.out.println(binaryString);
         } else {
             System.out.println("Encoding failed.");
+        }
+        return result;
+    }
+
+    static Boolean testDecoder(String binPath, String textPath, Map<Character, String> vocab) {
+        // Test Decoder class
+        System.out.println("Testing Decoder...");
+
+        AHuffman.src.Decoder decoder = new AHuffman.src.Decoder();
+        Boolean result = decoder.decode(binPath, textPath, vocab);
+        if (result) {
+            System.out.println("Decoding successful. Text file created at: " + textPath);
+            String decodedText = Util.readText(textPath);
+            System.out.println("Decoded text: " + decodedText);
+        } else {
+            System.out.println("Decoding failed.");
         }
         return result;
     }
