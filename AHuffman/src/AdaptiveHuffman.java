@@ -24,24 +24,24 @@ public class AdaptiveHuffman {
 
         // encode
         Encoder encoder = new Encoder();
-        encoder.encode(textFile1, binFile1);
+        // encoder.encode(textFile1, binFile1);
         encoder.encode(textFile2, binFile2);
-        encoder.encode(textFile3, binFile3);
+        // encoder.encode(textFile3, binFile3);
 
         // decode
         Decoder decoder = new Decoder();
-        decoder.decode(binFile1, decodedFile1, Util.getVocab(Util.readText(textFile1)));
+        // decoder.decode(binFile1, decodedFile1, Util.getVocab(Util.readText(textFile1)));
         decoder.decode(binFile2, decodedFile2, Util.getVocab(Util.readText(textFile2)));
-        decoder.decode(binFile3, decodedFile3, Util.getVocab(Util.readText(textFile3)));
+        // decoder.decode(binFile3, decodedFile3, Util.getVocab(Util.readText(textFile3)));
 
         // display compression statistics
-        Util.printCompressionStatistics(textFile1, binFile1, decodedFile1);
+        // Util.printCompressionStatistics(textFile1, binFile1, decodedFile1);
         Util.printCompressionStatistics(textFile2, binFile2, decodedFile2);
-        Util.printCompressionStatistics(textFile3, binFile3, decodedFile3);
+        // Util.printCompressionStatistics(textFile3, binFile3, decodedFile3);
 
         // visualize encoding process
         int delayMs = 1000; // Delay in milliseconds for visualization
-        visualizeEncoding(textFile1, delayMs);
+        visualizeEncoding(textFile2, delayMs);
     }
 
     public static void visualizeEncoding(String textPath, int delayMs) {

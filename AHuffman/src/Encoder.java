@@ -19,6 +19,15 @@ public class Encoder {
         StringBuilder encodedText = new StringBuilder();
         AHuffman.src.HuffmanTree tree = new AHuffman.src.HuffmanTree(vocab);
 
+        System.out.println("Encoding " + textPath + " to " + binPath);
+        System.out.println("Text length: " + text.length());
+        System.out.println("Vocabulary size: " + vocab.size());
+        System.out.println("Vocabulary: ");
+        for (Map.Entry<Character, String> entry : vocab.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue());
+        }
+        System.out.println("Text: " + text);
+
         for (char c : text.toCharArray()) {
             if (tree.encounter.get(c) == null) {
                 encodedText.append(tree.NYT.code);
