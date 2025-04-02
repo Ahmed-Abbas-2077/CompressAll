@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class Util {
     // Read text file
@@ -79,6 +82,28 @@ public class Util {
             }
         }
         return null;
+    }
+
+    public static Map<Character, String> getVocab(String text) {
+        Map<Character, String> vocab = new HashMap<>();
+        Set<Character> chars = new HashSet<>();
+
+        for (char c : text.toCharArray()) {
+            chars.add(c);
+        }
+
+        int length = (int) Math.ceil(Math.log(chars.size()) / Math.log(2));
+        int index = 0;
+
+        for (char c : chars) {
+            StringBuilder code = new StringBuilder(Integer.toBinaryString(index++));
+            while (code.length() < length) {
+                code.insert(0, '0');
+            }
+            vocab.put(c, code.toString());
+        }
+
+        return vocab;
     }
 
 }
