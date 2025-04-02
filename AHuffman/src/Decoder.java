@@ -5,8 +5,6 @@ import java.util.Map;
 
 import Util.Util;
 
-// - [ ] Decoder.java
-// 	- bool Decode(String binPath, String textPath) (reads binary string, decodes it by incrementally reading the binary string and decoding the characters within, returns true if decoding finished correctly, raises error o.w.)
 
 public class Decoder {
     
@@ -45,7 +43,7 @@ public class Decoder {
 
             System.out.println("Current code: " + currentCode.toString());
             Node decodedNode = tree.searchCode(tree.root, currentCode.toString());
-            System.out.println("Decoded node: " + decodedNode);
+            System.out.println("Decoded node: " + decodedNode.character + " " + decodedNode.code);
             if (decodedNode != null) {
                 if (decodedNode.character != null) {
                     decodedText.append(decodedNode.character);
@@ -61,6 +59,9 @@ public class Decoder {
                     
                     currentCode.setLength(0);
                 } 
+            }
+            if (index >= binaryString.length()) {
+                break;
             }
             currentCode.append(binaryString.charAt(index));
             index++;

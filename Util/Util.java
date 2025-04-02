@@ -106,4 +106,41 @@ public class Util {
         return vocab;
     }
 
+    public static int getFileSize(String filePath) {
+        try {
+            return (int) Files.size(Paths.get(filePath));
+        } catch (IOException e) {
+            System.err.println("Error getting file size: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    public static double getCompressionRatio(String originalFilePath, String compressedFilePath) {
+        int originalSize = getFileSize(originalFilePath);
+        int compressedSize = getFileSize(compressedFilePath);
+
+        if (originalSize <= 0 || compressedSize <= 0) {
+            return -1;
+        }
+
+        return ((double) compressedSize / originalSize) * 100;
+    }
+
+    public static void printCompressionStatistics(String originalFilePath, String compressedFilePath, String decodedFilePath) {
+        int originalSize = getFileSize(originalFilePath);
+        int compressedSize = getFileSize(compressedFilePath);
+        int decodedSize = getFileSize(decodedFilePath);
+
+        if (originalSize <= 0 || compressedSize <= 0 || decodedSize <= 0) {
+            System.out.println("Error: Invalid file sizes.");
+            return;
+        }
+
+        double compressionRatio = getCompressionRatio(originalFilePath, compressedFilePath);
+        System.out.println("\nOriginal size: " + originalSize + " bytes");
+        System.out.println("Compressed size: " + compressedSize + " bytes");
+        System.out.println("Decoded size: " + decodedSize + " bytes");
+        System.out.println("Compression ratio: " + compressionRatio + "%\n");
+    }   
+
 }
