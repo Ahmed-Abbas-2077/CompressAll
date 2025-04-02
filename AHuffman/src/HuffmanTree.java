@@ -9,12 +9,12 @@ import java.util.ArrayList;
 public class HuffmanTree {
 
     public Node root;
-    int e;
-    int size;
-    Map<Character, String> vocabulary;
-    Map<Character, Boolean> encounter;
-    Node NYT;
-    int initialNumber;
+    public int e;
+    public int size;
+    public Map<Character, String> vocabulary;
+    public Map<Character, Boolean> encounter;
+    public Node NYT;
+    public int initialNumber;
 
     public HuffmanTree(Map<Character, String> vocabulary) {
         this.vocabulary = vocabulary;

@@ -2,12 +2,12 @@ package AHuffman.src;
 
 
 public class Node {
-    Character character;
-    int frequency;
-    int number;
-    String code;
-    Node left, right;
-    Node parent;
+    public Character character;
+    public int frequency;
+    public int number;
+    public String code;
+    public Node left, right;
+    public Node parent;
 
     // constructor
     Node(Character character, int frequency, int number, String code, Node left, Node right, Node parent) {
