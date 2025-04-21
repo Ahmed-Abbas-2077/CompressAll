@@ -9,7 +9,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.File;
 import javax.imageio.ImageIO;
 
 public class Util {
@@ -146,7 +148,16 @@ public class Util {
         System.out.println("Compression ratio: " + compressionRatio + "%\n");
     }   
 
-    public static double[][][][][] readImage(String filePath) {
+
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+
+
+
+    public static double[][][][][] readImage(String filePath, int dimension) {
         try {
             // Read the image file
             BufferedImage image = ImageIO.read(new File(filePath));
@@ -156,25 +167,25 @@ public class Util {
             int height = image.getHeight();
             
             // Calculate padded dimensions (next multiple of 8)
-            int paddedWidth = (width + 7) / 8 * 8;
-            int paddedHeight = (height + 7) / 8 * 8;
+            int paddedWidth = (width + (dimension-1)) / dimension * dimension;
+            int paddedHeight = (height + (dimension-1)) / dimension * dimension;
             
             // Calculate number of blocks
-            int numBlocksX = paddedWidth / 8;
-            int numBlocksY = paddedHeight / 8;
+            int numBlocksX = paddedWidth / dimension;
+            int numBlocksY = paddedHeight / dimension;
             
             // Create 5D array for blocks [numBlocksY][numBlocksX][8][8][3]
-            double[][][][][] blocks = new double[numBlocksY][numBlocksX][8][8][3];
+            double[][][][][] blocks = new double[numBlocksY][numBlocksX][dimension][dimension][3];
             
             // Process each block
             for (int blockY = 0; blockY < numBlocksY; blockY++) {
                 for (int blockX = 0; blockX < numBlocksX; blockX++) {
                     // Process each pixel in the block
-                    for (int y = 0; y < 8; y++) {
-                        for (int x = 0; x < 8; x++) {
+                    for (int y = 0; y < dimension; y++) {
+                        for (int x = 0; x < dimension; x++) {
                             // Calculate actual image coordinates
-                            int imgX = blockX * 8 + x;
-                            int imgY = blockY * 8 + y;
+                            int imgX = blockX * dimension + x;
+                            int imgY = blockY * dimension + y;
                             
                             // Get pixel RGB values (handle padding by using black if out of bounds)
                             int rgb = (imgX < width && imgY < height) ? image.getRGB(imgX, imgY) : 0;
@@ -203,7 +214,6 @@ public class Util {
     {
         int numBlocksY = blocks.length;
         int numBlocksX = blocks[0].length;
-        int blockSize = blocks[0][0].length * blocks[0][0][0].length * blocks[0][0][0][0].length; // 8*8*3 = 192
 
         double[][][][] serializedBlocks = new double[numBlocksY * numBlocksX][8][8][3];
 
@@ -218,9 +228,8 @@ public class Util {
 
     public static double[][][][][] deserializeImageBlocks(double[][][][] serializedBlocks, int aspectX, int aspectY) {
         int numBlocks = serializedBlocks.length;
-        int blockSize = serializedBlocks[0].length * serializedBlocks[0][0].length * serializedBlocks[0][0][0].length; // 8*8*3 = 192
 
-        double[][][][][] blocks = new double[aspectY][aspectX][8][8][3];
+        double[][][][][] blocks = new double[aspectY][aspectX][serializedBlocks[0].length][serializedBlocks[0][0].length][serializedBlocks[0][0][0].length]; // 8*8*3 = 192
 
         for (int i = 0; i < numBlocks; i++) {
             int blockY = i / aspectX;
@@ -230,14 +239,13 @@ public class Util {
         return blocks;
     }
 
-    public static void saveImage(double[][][][][] blocks, String filePath) {
+    public static void saveImage(double[][][][][] blocks, String filePath, int dimension) {
         int numBlocksY = blocks.length;
         int numBlocksX = blocks[0].length;
-        int blockSize = blocks[0][0].length * blocks[0][0][0].length * blocks[0][0][0][0].length; // 8*8*3 = 192
 
         // Calculate image dimensions
-        int width = numBlocksX * 8;
-        int height = numBlocksY * 8;
+        int width = numBlocksX * dimension
+        int height = numBlocksY * dimension;
 
         // Create a new BufferedImage
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -245,8 +253,8 @@ public class Util {
         // Set pixel values in the image
         for (int blockY = 0; blockY < numBlocksY; blockY++) {
             for (int blockX = 0; blockX < numBlocksX; blockX++) {
-                for (int y = 0; y < 8; y++) {
-                    for (int x = 0; x < 8; x++) {
+                for (int y = 0; y < dimension; y++) {
+                    for (int x = 0; x < dimension; x++) {
                         // Get RGB values from the block
                         double r = blocks[blockY][blockX][y][x][0] * 255.0;
                         double g = blocks[blockY][blockX][y][x][1] * 255.0;
@@ -254,7 +262,7 @@ public class Util {
 
                         // Set pixel color in the image
                         int rgb = ((int) r << 16) | ((int) g << 8) | (int) b;
-                        image.setRGB(blockX * 8 + x, blockY * 8 + y, rgb);
+                        image.setRGB(blockX * dimension + x, blockY * dimension + y, rgb);
                     }
                 }
             }
