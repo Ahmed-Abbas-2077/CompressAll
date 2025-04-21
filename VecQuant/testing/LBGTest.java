@@ -186,8 +186,8 @@ public class LBGTest {
             
             System.out.println("\nSerializing image blocks...");
             double[][][][] serializedBlocks = testSerializeImageBlocks(blocks);
-            int aspectX = blocks.length;
-            int aspectY = blocks[0].length;
+            int aspectX = blocks[0].length;
+            int aspectY = blocks.length;
             
             System.out.println("\nTesting average block calculation...");
             double[][][] averageBlock1 = testComputeAverageBlock(blocks[0]);
