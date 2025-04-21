@@ -278,14 +278,46 @@ public class LBGVecQuant {
         }
     }
     
-//     // Encode and Decode methods (stubs - to be implemented)
-//     public int[] Encode(double[][][][] data) {
-//         // TODO: Implementation
-//         return new int[0];
-//     }
+    // Encode
+    // create a new int array where each index represents the index of the image block in the data
+    // , and the value at that index is the index of the closest code block in the codebook
+    // , then return the int array
+    // , this is done by iterating over each block of image data, finding the closest code block in the codebook,
+    // and assigning the index of the closest code block to the int array at the index of the image block
+    public int[] Encode(double[][][][] data, double[][][][] codebook) {
+        if (isEmpty(data)) {
+            throw new IllegalArgumentException("Data is empty.\n");
+        }
+        if (isEmpty(codebook)) {
+            throw new IllegalArgumentException("codebook is empty.\n");
+        }
+
+        int[] encodedData = new int[data.length];
+        for (int i = 0; i < data.length; i++) {
+            double minDistance = Double.MAX_VALUE;
+            int minIndex = -1;
+            for (int j = 0; j < codebook.length; j++) {
+                double distance = ComputeDistance(data[i], codebook[j]);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    minIndex = j;
+                }
+            }
+            encodedData[i] = minIndex;
+        }
+        return encodedData;
+    }
     
-//     public double[][][][] Decode(int[] encodedData) {
-//         // TODO: Implementation
-//         return new double[0][0][0][0];
-//     }
+    // Decode
+    // create a new 4D array of doubles where each index represents the index of the image block in the data
+    public double[][][][] Decode(int[] encodedData) {
+        if (encodedData == null || encodedData.length == 0) {
+            throw new IllegalArgumentException("Encoded data is empty.\n");
+        }
+        double[][][][] decodedData = new double[encodedData.length][][][];
+        for (int i = 0; i < encodedData.length; i++) {
+            decodedData[i] = codebook[encodedData[i]];
+        }
+        return decodedData;
+    }
 }

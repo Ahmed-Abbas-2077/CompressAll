@@ -197,6 +197,23 @@ public class LBGTest {
             
             System.out.println("\nDeserializing image blocks...");
             double[][][][][] deserializedBlocks = testDeserializeImageBlocks(serializedBlocks, aspectX, aspectY);
+
+            // print deserialized blocks for debugging
+            // System.out.println("\nDeserialized Blocks: \n");
+            // for (int i = 0; i < deserializedBlocks.length; i++) {
+            //     double[][][][] block = deserializedBlocks[i];
+            //     System.out.print("Block " + i + ": \n");
+            //     for (int j = 0; j < block.length; j++) {
+            //         System.out.print("\t Row " + j + ": \n");
+            //         for (int k = 0; k < block[j].length; k++) {
+            //             for (int l = 0; l < block[j][k].length; l++) {
+            //                 System.out.print(block[j][k][l] + " ");
+            //             }
+            //             System.out.print(", ");
+            //         }
+            //         System.out.println("\n");
+            //     }
+            // }
             
             String outputFilePath = args[1];
             System.out.println("\nSaving image to " + outputFilePath);
@@ -308,20 +325,87 @@ public class LBGTest {
             // print final codebook
             System.out.println("\nFinal Codebook: \n");
             double[][][][] finalCodebook = lbg.getCodebook();
-            for (int i = 0; i < finalCodebook.length; i++) {
-                double[][][] centroid = finalCodebook[i];
-                System.out.print("Centroid " + i + ": \n");
-                for (int j = 0; j < centroid.length; j++) {
-                    for (int k = 0; k < centroid[j].length; k++) {
-                        for (int l = 0; l < centroid[j][k].length; l++) {
-                            System.out.print(centroid[j][k][l] + " ");
-                        }
-                        System.out.print(", ");
-                    }
-                    System.out.println("\n");
-                }
-            }
+            // for (int i = 0; i < finalCodebook.length; i++) {
+            //     double[][][] centroid = finalCodebook[i];
+            //     System.out.print("Centroid " + i + ": \n");
+            //     for (int j = 0; j < centroid.length; j++) {
+            //         for (int k = 0; k < centroid[j].length; k++) {
+            //             for (int l = 0; l < centroid[j][k].length; l++) {
+            //                 System.out.print(centroid[j][k][l] + " ");
+            //             }
+            //             System.out.print(", ");
+            //         }
+            //         System.out.println("\n");
+            //     }
+            // }
             
+
+            // test encoding
+            System.out.println("\nTesting encoding...");
+            int[] encodedData = lbg.Encode(serializedBlocks, finalCodebook);
+            assert encodedData != null : "Failed to encode data";
+            System.out.println("Encoding completed successfully!");
+
+            // test decoding
+            System.out.println("\nTesting decoding...");
+            double[][][][] decodedData = lbg.Decode(encodedData);
+            assert decodedData != null : "Failed to decode data";
+            System.out.println("Decoding completed successfully!");
+
+            // print decoded data
+            // System.out.println("\nDecoded Data: \n");
+            // for (int i = 0; i < decodedData.length; i++) {
+            //     double[][][] block = decodedData[i];
+            //     System.out.print("Block " + i + ": \n");
+            //     for (int j = 0; j < block.length; j++) {
+            //         for (int k = 0; k < block[j].length; k++) {
+            //             for (int l = 0; l < block[j][k].length; l++) {
+            //                 System.out.print(block[j][k][l] + " ");
+            //             }
+            //             System.out.print(", ");
+            //         }
+            //         System.out.println("\n");
+            //     }
+            // }
+
+
+            // test saving encoded data
+            
+            // deserialize encoded data
+            System.out.println("\nTesting deserialization of encoded data...");
+            double[][][][][] deserializedDecodedData = Util.deserializeImageBlocks(decodedData, aspectX, aspectY);
+            assert deserializedDecodedData != null : "Failed to deserialize encoded data";
+            System.out.println("Deserialization of encoded data completed successfully!");
+            // print deserialized decoded data
+            System.out.println("\nDeserialized Decoded Data: \n");
+            // for (int i = 0; i < deserializedDecodedData.length; i++) {
+            //     double[][][][] block = deserializedDecodedData[i];
+            //     System.out.print("Block " + i + ": \n");
+            //     for (int j = 0; j < block.length; j++) {
+            //         System.out.print("\t Row " + j + ": \n");
+            //         for (int k = 0; k < block[j].length; k++) {
+            //             for (int l = 0; l < block[j][k].length; l++) {
+            //                 for (int m = 0; m < block[j][k][l].length; m++) {
+            //                     System.out.print(block[j][k][l][m] + " ");
+            //                 }
+            //                 System.out.print(", ");
+            //             }
+            //             System.out.println("\n");;
+            //         }
+            //         System.out.println("\n-------------\n");
+            //     }
+            // }
+
+            // save encoded data
+            String compressedFilePath = "E:\\Zewail\\Sophomore Year\\DSAI 325\\DNA-Compression\\data\\mit2_decompressed.png";
+            System.out.println("\nSaving encoded data to " + compressedFilePath);
+            Util.saveImage(deserializedDecodedData, compressedFilePath, 8);
+            System.out.println("Compressed image saved successfully!");
+
+            // display Image Compression Statistics
+            System.out.println("\nImage Compression Statistics:");
+            Util.printImageCompressionStatistics(filePath, encodedData, compressedFilePath);
+            System.out.println("Image compression statistics displayed successfully!");
 
 
             System.out.println("\nAll tests completed successfully!");

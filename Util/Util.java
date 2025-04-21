@@ -148,6 +148,23 @@ public class Util {
         System.out.println("Compression ratio: " + compressionRatio + "%\n");
     }   
 
+    public static void printImageCompressionStatistics(String originalFilePath, int[] encodedData, String decodedFilePath) {
+        int originalSize = getFileSize(originalFilePath);
+        int compressedSize = encodedData.length * 4; // Assuming each int is 4 bytes
+        int decodedSize = getFileSize(decodedFilePath);
+
+        if (originalSize <= 0 || compressedSize <= 0 || decodedSize <= 0) {
+            System.out.println("Error: Invalid file sizes.");
+            return;
+        }
+
+        double compressionRatio = ((double) compressedSize / originalSize) * 100;
+        System.out.println("\nOriginal size: " + originalSize + " bytes");
+        System.out.println("Compressed size: " + compressedSize + " bytes");
+        System.out.println("Decoded size: " + decodedSize + " bytes");
+        System.out.println("Compression ratio: " + String.format("%.2f", compressionRatio) + "%\n");
+    }
+
 
 // -----------------------------------------------------------------------
 // -----------------------------------------------------------------------
