@@ -7,7 +7,7 @@ import java.util.Vector;
 public class LBGTest {
     
     public static double[][][][][] testReadImage(String filePath) {
-        double[][][][][] blocks = Util.readImage(filePath);
+        double[][][][][] blocks = Util.readImage(filePath, 8);
         assert blocks != null : "Failed to read image from file";
         return blocks;
     }
@@ -25,9 +25,9 @@ public class LBGTest {
     }
 
     public static void testSaveImage(double[][][][][] blocks, String filePath) {
-        Util.saveImage(blocks, filePath);
+        Util.saveImage(blocks, filePath, 8);
         // check if the image is saved correctly
-        double[][][][][] loadedBlocks = Util.readImage(filePath);
+        double[][][][][] loadedBlocks = Util.readImage(filePath, 8);
         assert loadedBlocks != null : "Failed to load image from file after saving";
         assert blocks.length == loadedBlocks.length : "Loaded image blocks do not match original blocks";
     }
@@ -37,16 +37,16 @@ public class LBGTest {
         double[][][] averageBlock = LBGVecQuant.ComputeAverageBlock(data);
         assert averageBlock != null : "Failed to compute average block";
         // print average block for debugging
-        System.out.println("Average Block: \n");
-        for (int i = 0; i < averageBlock.length; i++) {
-            for (int j = 0; j < averageBlock[i].length; j++) {
-                for (int k = 0; k < averageBlock[i][j].length; k++) {
-                    System.out.print(averageBlock[i][j][k] + " ");
-                }
-                System.out.print(", ");
-            }
-            System.out.println("\n");
-        }
+        // System.out.println("Average Block: \n");
+        // for (int i = 0; i < averageBlock.length; i++) {
+        //     for (int j = 0; j < averageBlock[i].length; j++) {
+        //         for (int k = 0; k < averageBlock[i][j].length; k++) {
+        //             System.out.print(averageBlock[i][j][k] + " ");
+        //         }
+        //         System.out.print(", ");
+        //     }
+        //     System.out.println("\n");
+        // }
         return averageBlock;
     }
 
@@ -149,6 +149,30 @@ public class LBGTest {
         return distortion;
     }
 
+
+    // test CheckConvergence
+    public static boolean testCheckConvergence(double prevDistortion, double currDistortion, double threshold) {
+        boolean converged = LBGVecQuant.CheckConvergence(prevDistortion, currDistortion, threshold);
+        assert converged : "Failed to check convergence";
+        return converged;
+    }
+
+
+    // test ComputeNumCodeBlocks
+    public static int testComputeNumCodeBlocks(double compressionRatio, int dimension) {
+        int numCodeBlocks = LBGVecQuant.ComputeNumCodeBlocks(compressionRatio, dimension);
+        assert numCodeBlocks > 0 : "Number of code blocks must be greater than 0";
+        return numCodeBlocks;
+    }
+
+    // test LBGVecQuant constructor
+    public static LBGVecQuant testLBGVecQuantConstructor(double[][][][] data, int numCodeBlocks, double threshold) {
+        LBGVecQuant lbg = new LBGVecQuant(data, numCodeBlocks, threshold);
+        assert lbg != null : "Failed to create LBGVecQuant instance";
+        return lbg;
+    }
+
+
     public static void main(String[] args) {
         if (args.length < 2) {
             System.out.println("Usage: java VecQuant.testing.LBGTest <input_file_path> <output_file_path>");
@@ -237,24 +261,67 @@ public class LBGTest {
             System.out.println("\nTesting distortion computation...");
             double distortion1 = testComputeDistortion(serializedBlocks, codebook4);
             System.out.println("Distortion1: " + distortion1);
-            // update codebook4 centroids
-            codebook4 = testUpdateCentroids(testComputeQuantRegions(serializedBlocks, codebook4), codebook4);
-            double distortion2 = testComputeDistortion(serializedBlocks, codebook4);
-            System.out.println("Distortion2: " + distortion2);
+            // // update codebook4 centroids
+            // codebook4 = testUpdateCentroids(testComputeQuantRegions(serializedBlocks, codebook4), codebook4);
+            // double distortion2 = testComputeDistortion(serializedBlocks, codebook4);
+            // System.out.println("Distortion2: " + distortion2);
 
-            // update codebook4 centroids again
-            codebook4 = testUpdateCentroids(testComputeQuantRegions(serializedBlocks, codebook4), codebook4);
-            double distortion3 = testComputeDistortion(serializedBlocks, codebook4);
-            System.out.println("Distortion3: " + distortion3);
+            // // update codebook4 centroids again
+            // codebook4 = testUpdateCentroids(testComputeQuantRegions(serializedBlocks, codebook4), codebook4);
+            // double distortion3 = testComputeDistortion(serializedBlocks, codebook4);
+            // System.out.println("Distortion3: " + distortion3);
 
-            // update codebook4 centroids again
-            codebook4 = testUpdateCentroids(testComputeQuantRegions(serializedBlocks, codebook4), codebook4);
-            double distortion4 = testComputeDistortion(serializedBlocks, codebook4);
-            System.out.println("Distortion4: " + distortion4);
+            // // update codebook4 centroids again
+            // codebook4 = testUpdateCentroids(testComputeQuantRegions(serializedBlocks, codebook4), codebook4);
+            // double distortion4 = testComputeDistortion(serializedBlocks, codebook4);
+            // System.out.println("Distortion4: " + distortion4);
+
+
+            // check convergence
+            System.out.println("\nTesting convergence check...");
+            double threshold = 0.0001;
+            double prevDistortion = 0.0;
+            double currDistortion = distortion1;
+            while (!testCheckConvergence(prevDistortion, currDistortion, threshold)) {
+                prevDistortion = currDistortion;
+                codebook4 = testUpdateCentroids(testComputeQuantRegions(serializedBlocks, codebook4), codebook4);
+                currDistortion = testComputeDistortion(serializedBlocks, codebook4);
+                System.out.println("Previous Distortion: " + prevDistortion);
+                System.out.println("Current Distortion: " + currDistortion + "\n");
+            }
+            System.out.println("Convergence achieved!");
             
+            
+            // compute number of code blocks
+            System.out.println("\nTesting number of code blocks computation...");
+            int dimension = 8; // example dimension
+            double compressionRatio = 1.0/192.0;
+            int numCodeBlocks = testComputeNumCodeBlocks(compressionRatio, dimension);
+            System.out.println("Number of code blocks: " + numCodeBlocks);
 
 
-    
+            // test LBGVecQuant constructor
+            System.out.println("\nTesting LBGVecQuant constructor...");
+            LBGVecQuant lbg = testLBGVecQuantConstructor(serializedBlocks, numCodeBlocks, threshold);
+            System.out.println("LBGVecQuant instance created successfully!");
+
+            // print final codebook
+            System.out.println("\nFinal Codebook: \n");
+            double[][][][] finalCodebook = lbg.getCodebook();
+            for (int i = 0; i < finalCodebook.length; i++) {
+                double[][][] centroid = finalCodebook[i];
+                System.out.print("Centroid " + i + ": \n");
+                for (int j = 0; j < centroid.length; j++) {
+                    for (int k = 0; k < centroid[j].length; k++) {
+                        for (int l = 0; l < centroid[j][k].length; l++) {
+                            System.out.print(centroid[j][k][l] + " ");
+                        }
+                        System.out.print(", ");
+                    }
+                    System.out.println("\n");
+                }
+            }
+            
 
 
             System.out.println("\nAll tests completed successfully!");

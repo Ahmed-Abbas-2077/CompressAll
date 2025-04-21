@@ -10,6 +10,21 @@ public class LBGVecQuant {
     private String outputFilePath;
     
     // utility methods
+
+    public double[][][][] getCodebook() {
+        return codebook;
+    }
+
+    // calculate the number of code blocks needed in the codebook, based on the compression ratio and the dimension of the image blocks
+    // based on this formula: $$\therefore \; \psi = 2^{24\Pi\mathbb{d}^2}$$
+    // where $\mathbb{d}$ is the dimension of the image blocks and $\Pi$ is the compression ratio
+    public static int ComputeNumCodeBlocks(double compressionRatio, int blockDimension) {
+        if (compressionRatio <= 0 || blockDimension <= 0) {
+            throw new IllegalArgumentException("Compression ratio and block dimension must be positive.\n");
+        }
+        return (int) Math.ceil(Math.pow(2, 24 * compressionRatio * Math.pow(blockDimension, 2)));
+    }
+
     // calculate the average block of a 4D array of doubles
     public static double[][][] ComputeAverageBlock(double[][][][] data) {
         if (isEmpty(data)) {

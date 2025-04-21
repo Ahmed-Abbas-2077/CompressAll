@@ -244,7 +244,7 @@ public class Util {
         int numBlocksX = blocks[0].length;
 
         // Calculate image dimensions
-        int width = numBlocksX * dimension
+        int width = numBlocksX * dimension;
         int height = numBlocksY * dimension;
 
         // Create a new BufferedImage
