@@ -292,4 +292,54 @@ public class Util {
             System.err.println("Error saving image: " + e.getMessage());
         }
     }
+
+
+    public static int[][][] readImage(String imagePath){
+        try {
+            BufferedImage image = ImageIO.read(new File(imagePath));
+            int width = image.getWidth();
+            int height = image.getHeight();
+            int[][][] imageData = new int[height][width][3]; // 3 for RGB channels
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int rgb = image.getRGB(x, y);
+                    imageData[y][x][0] = (rgb >> 16) & 0xFF; // Red
+                    imageData[y][x][1] = (rgb >> 8) & 0xFF;  // Green
+                    imageData[y][x][2] = rgb & 0xFF;         // Blue
+                }
+            }
+            return imageData;
+        } catch (IOException e) {
+            System.err.println("Error reading image: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static boolean saveImage (String imagePath, int[][][] imageData){
+        int height = imageData.length;
+        int width = imageData[0].length;
+
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int r = imageData[y][x][0];
+                int g = imageData[y][x][1];
+                int b = imageData[y][x][2];
+                int rgb = (r << 16) | (g << 8) | b;
+                image.setRGB(x, y, rgb);
+            }
+        }
+
+        try {
+            ImageIO.write(image, "png", new File(imagePath));
+            return true;
+        } catch (IOException e) {
+            System.err.println("Error saving image: " + e.getMessage());
+            return false;
+        }
+    }
+
+
 }
