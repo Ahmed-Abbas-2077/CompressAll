@@ -342,4 +342,53 @@ public class Util {
     }
 
 
+    // .\DPCM\test\DPCMTest.java:633: error: cannot find symbol
+    // int choice = Util.getIntInput(1, 14);
+    //                  ^
+    // symbol:   method getIntInput(int,int)
+    // location: class Util
+    // .\DPCM\test\DPCMTest.java:685: error: cannot find symbol
+    //     String answer = Util.getStringInput("y", "n");
+    //                         ^
+    // symbol:   method getStringInput(String,String)
+    // location: class Util
+    // 2 errors
+    // error: compilation failed
+
+    public static int getIntInput(int min, int max) {
+        java.util.Scanner scanner = new java.util.Scanner(System.in);
+        int input = -1;
+        while (input < min || input > max) {
+            System.out.print("Enter a number between " + min + " and " + max + ": ");
+            if (scanner.hasNextInt()) {
+                input = scanner.nextInt();
+            } else {
+                scanner.next(); // Clear invalid input
+            }
+        }
+        return input;
+    }
+
+    public static String getStringInput(String... validInputs) {
+        java.util.Scanner scanner = new java.util.Scanner(System.in);
+        String input = "";
+        while (!isValidInput(input, validInputs)) {
+            System.out.print("Enter a valid input (" + String.join(", ", validInputs) + "): ");
+            input = scanner.nextLine().trim();
+        }
+        return input;
+    }
+
+    private static boolean isValidInput(String input, String... validInputs) {
+        for (String validInput : validInputs) {
+            if (input.equalsIgnoreCase(validInput)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
+
+
 }
