@@ -2,6 +2,7 @@ package Multi_VQ.src;
 
 import java.util.Vector;
 import Util.Util;
+import java.util.ArrayList;
 
 public class LBGVecQuant {
 
@@ -172,7 +173,7 @@ public class LBGVecQuant {
     // The codebook is a 4D array of doubles, where the first dimension is the number of code blocks,
     // the second dimension is the number of rows in each block, the third dimension is the number of columns in each block, and the fourth dimension is the number of channels in each block.
     // The codebook is used to represent the training data in a more compact form, by replacing each block of training data with the closest code block in the codebook.
-    public double[][][] codebook(double[][][] trainingData, int numCodeblocks, double threshold) {
+    public static double[][][] codebook(double[][][] trainingData, int numCodeblocks, double threshold) {
         double[][][] codebook = new double[numCodeblocks][][];
 
         // stores the initial code blocks then assigns them to the codebook at the end
@@ -212,7 +213,7 @@ public class LBGVecQuant {
     // , then return the int array
     // , this is done by iterating over each block of image data, finding the closest code block in the codebook,
     // and assigning the index of the closest code block to the int array at the index of the image block
-    public int[] Encode(double[][][] data, double[][][] codebook) {
+    public static int[] Encode(double[][][] data, double[][][] codebook) {
 
         int[] encodedData = new int[data.length];
         for (int i = 0; i < data.length; i++) {
@@ -232,7 +233,7 @@ public class LBGVecQuant {
     
     // Decode
     // create a new 3D array of doubles where each index represents the index of the image block in the data
-    public double[][][] Decode(int[] encodedData, double[][][] codebook) {
+    public static double[][][] Decode(int[] encodedData, double[][][] codebook) {
         double[][][] decodedData = new double[encodedData.length][][];
         for (int i = 0; i < encodedData.length; i++) {
             decodedData[i] = codebook[encodedData[i]];
@@ -241,7 +242,7 @@ public class LBGVecQuant {
     }
 
 
-    public Vector<double[][][]> codebookRGB(Vector<double[][][]> rgbImages, int numCodeVectors, int dimension){
+    public static Vector<double[][][]> codebookRGB(Vector<double[][][]> rgbImages, int numCodeVectors, int dimension){
         Vector<double[][][]> rgbValues = Util.extractRGB(rgbImages, dimension);
 
         // create a codebook for each color channel
@@ -256,7 +257,24 @@ public class LBGVecQuant {
     }
 
 
-    public void multiImageCodebook(Vector<String> imagePaths, int dimension, int numCodeVectors){
+    // a polymorphism of codebookRGB for a single image
+    public static Vector<double[][][]> codebookRGB(double[][][] rgbImage, int numCodeVectors, int dimension){
+        Vector<double[][]> rgbChannels = Util.getImageRGB(rgbImage);
+        Vector<double[][][]> codebooks = new Vector<double[][][]>();
+
+
+        for (double[][] channel : rgbChannels) {
+            double[][][] channelVectors = Util.splitImageVectors(channel, dimension);
+            double[][][] codebook = codebook(channelVectors, numCodeVectors, 0.01);
+            codebooks.add(codebook);
+        }
+
+        return codebooks;
+
+    }
+
+
+    public static void multiImageCodebook(Vector<String> imagePaths, int dimension, int numCodeVectors){
         // create a vector of image paths
         Vector<double[][][]> rgbImages = new Vector<double[][][]>();
         for (int i = 0; i < imagePaths.size(); i++) {
@@ -273,6 +291,91 @@ public class LBGVecQuant {
         }
     }
 
+
+    public static Vector<int[]> multiChannelEncoding(double[][][] image, Vector<double[][][]> codebooks, int dimension){
+        // split the image into 3 channels
+        Vector<double[][]> imageRGB = Util.getImageRGB(image);
+
+        // split each channel into blocks of dimension x dimension
+        Vector<double[][][]> channelBlocks = new Vector<double[][][]>();
+        for (int i = 0; i < 3; i++){
+            double[][][] channel = Util.splitImageVectors(imageRGB.get(i), dimension);
+            channelBlocks.add(channel);
+        }
+
+        // encode each channel using the corresponding codebook
+        Vector<int[]> encodings = new Vector<int[]>();
+        for (int i=0; i<channelBlocks.size(); i++){
+            int[] encoding = Encode(channelBlocks.get(i), codebooks.get(i));
+            encodings.add(encoding);
+        }
+
+        // return the encodings
+        return encodings;
+    }
+
+
+    public static Vector<double[][][]> multiChannelDecoding(Vector<int[]> encodings, Vector<double[][][]> codebooks){
+        // decode each channel using the corresponding codebook
+        Vector<double[][][]> decodedChannels = new Vector<double[][][]>();
+        for (int i=0; i<encodings.size(); i++){
+            double[][][] decodedChannel = Decode(encodings.get(i), codebooks.get(i));
+            decodedChannels.add(decodedChannel);
+        }
+
+        // return the decoded channels
+        return decodedChannels;
+    }
+
+
+    public static void compressRGB(String imagePath, String outputPath, int dimension, int numCodeVectors){
+        // read the image
+        double[][][] image = Util.readImage(imagePath);
+        int height = image.length;
+        int width = image[0].length;
+
+        // create a codebook for each color channel
+        Vector<double[][][]> codebooks = codebookRGB(image, numCodeVectors, dimension);
+
+        // encode the image using the codebooks
+        Vector<int[]> encodings = multiChannelEncoding(image, codebooks, dimension);
+
+        // store encodings to file
+        Util.saveEncodings(dimension, height, width, encodings, codebooks, outputPath);
+
+    }
+
+    public static void decompressRGB(String encodedPath, String decodedPath){
+        ArrayList<Object> encodedData = Util.readEncodings(encodedPath);
+
+        // read the encoded data
+        int dimension = (int) encodedData.get(0);
+        int height = (int) encodedData.get(1);
+        int width = (int) encodedData.get(2);
+        Vector<double[][][]> codebooks = (Vector<double[][][]>) encodedData.get(3);
+        Vector<int[]> encodings = (Vector<int[]>) encodedData.get(4);
+
+
+        // decode each channel separately
+        Vector<double[][][]> decodedChannels = multiChannelDecoding(encodings, codebooks);
+
+
+        // reconstruct each channel using the decoded vectors
+        Vector<double[][]> reconstructedChannels = new Vector<double[][]>();
+        for (int i=0; i<decodedChannels.size(); i++){
+            double[][][] decodedChannel = decodedChannels.get(i);
+            reconstructedChannels.add(Util.reconstructImageFromBlocks(decodedChannel, height, width, dimension));
+        }
+
+
+        // combine the decoded channels into a single image
+        double[][][] decodedImage = Util.reconstructImage(reconstructedChannels); 
+
+
+        // write the decoded image to file
+        Util.saveImage(decodedPath, decodedImage);
+
+    }
 
 
 
