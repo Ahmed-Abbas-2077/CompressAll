@@ -6,9 +6,7 @@ import java.util.ArrayList;
 
 public class LBGVecQuant {
 
-    // calculate the number of code blocks needed in the codebook, based on the compression ratio and the dimension of the image blocks
-    // based on this formula: $$\therefore \; \psi = 2^{24\Pi\mathbb{d}^2}$$
-    // where $\mathbb{d}$ is the dimension of the image blocks and $\Pi$ is the compression ratio
+
     public static int ComputeNumCodeBlocks(double compressionRatio, int blockDimension) {
         if (compressionRatio <= 0 || blockDimension <= 0) {
             throw new IllegalArgumentException("Compression ratio and block dimension must be positive.\n");
@@ -16,7 +14,6 @@ public class LBGVecQuant {
         return (int) Math.ceil(Math.pow(2, 24 * compressionRatio * Math.pow(blockDimension, 2)));
     }
 
-    // calculate the average vector of a 3D array of 2D vectors
     public static double[][] ComputeAverageVector(double[][][] data) {
         double[][] avgBlock = new double[data[0].length][data[0][0].length];
         for (int i = 0; i < data.length; i++) {
@@ -52,7 +49,6 @@ public class LBGVecQuant {
     }
 
 
-    // calculate euclidean distance between two blocks of data
     public static double ComputeDistance(double[][] block1, double[][] block2) {
         double distance = 0.0;
         for (int i = 0; i < block1.length; i++) {
@@ -63,10 +59,7 @@ public class LBGVecQuant {
         return Math.sqrt(distance);
     }
 
-    // iterate through the training data blocks and calculate their distance to the code blocks
-    // , then assign each training data block to its closest code block, appending it to
-    // the index of code block in the quantization regions vector
-    // , and return the quantization regions vector
+
     public static Vector<Vector<double[][]>> ComputeQuantRegions(double[][][] data, Vector<double[][]> codebook) {
 
         Vector<Vector<double[][]>> quantizationRegions = new Vector<Vector<double[][]>>();
@@ -96,7 +89,7 @@ public class LBGVecQuant {
         for (int i = 0; i < codebook.size(); i++) {
             Vector<double[][]> region = quantizationRegions.get(i);
             if (region.size() == 0) {
-                newCodebook.add(codebook.get(i)); // Keep the old codeblock if region is empty
+                newCodebook.add(codebook.get(i)); 
                 continue;
             }
             double[][] centroid = ComputeAverageVector(region);
@@ -105,23 +98,32 @@ public class LBGVecQuant {
         return newCodebook;
     }
 
-    // iterate through the codebook and split each code block into 2 blocks
-    // , then add each new couple of blocks to the new codebook
-    // return the new codebook
-    public static Vector<double[][]> SplitCodebook(Vector<double[][]> codebook) {
+
+    public static Vector<double[][]> SplitCodebook(Vector<double[][]> codebook, Boolean YUV, int channel) {
 
         Vector<double[][]> newCodebook = new Vector<double[][]>();
 
         for (int i = 0; i < codebook.size(); i++) {
             double[][] block1 = new double[codebook.get(i).length][codebook.get(i)[0].length];
             double[][] block2 = new double[codebook.get(i).length][codebook.get(i)[0].length];
+
             for (int j = 0; j < codebook.get(i).length; j++) {
                 for (int k = 0; k < codebook.get(i)[j].length; k++) {
-                    double distance2Max = Math.abs(1 - codebook.get(i)[j][k]); // distance to 1 (max value)
-                    double distance2Min = Math.abs(codebook.get(i)[j][k] - 0); // distance to 0 (min value)
-                    // we add stochasticity by randomizing who would get min and max
-                    // we have 4 choices: max-min, min-max, min-min, max-max
-                    // we add the distance to the max value to the first block and the distance to the min value to the second block
+
+                    double maxVal = 1.0; 
+                    double minVal = 0.0; 
+                    
+                    if (YUV && channel > 0) { 
+                        maxVal = (channel == 1) ? 0.436 : 0.615;
+                        minVal = -maxVal;
+                    }
+                    
+                    double distance2Max = Math.abs(maxVal - codebook.get(i)[j][k]); 
+                    double distance2Min = Math.abs(codebook.get(i)[j][k] - minVal); 
+
+
+
+
                     int randomChoice = (int) (Math.random() * 4);
                     if (randomChoice == 0) {
                         block1[j][k] = codebook.get(i)[j][k] + (distance2Max / 2);
@@ -165,33 +167,19 @@ public class LBGVecQuant {
         return Math.abs((prevDistortion - currDistortion) / currDistortion) < threshold;
     }
 
-    // constructor
-    // creates a vector of 3d code blocks that represent the initial code blocks
-    // , using k-means clustering algorithm. Start with the average block
-    // , then split each block into 2 blocks, and repeat until the desired number of blocks is reached.
-    // Once the desired number of blocks is reached, the algorithm will stop splitting and return the codebook.
-    // The codebook is a 4D array of doubles, where the first dimension is the number of code blocks,
-    // the second dimension is the number of rows in each block, the third dimension is the number of columns in each block, and the fourth dimension is the number of channels in each block.
-    // The codebook is used to represent the training data in a more compact form, by replacing each block of training data with the closest code block in the codebook.
-    public static double[][][] codebook(double[][][] trainingData, int numCodeblocks, double threshold) {
+    public static double[][][] codebook(double[][][] trainingData, int numCodeblocks, double threshold, Boolean YUV, int channel) {
         double[][][] codebook = new double[numCodeblocks][][];
 
-        // stores the initial code blocks then assigns them to the codebook at the end
         Vector<double[][]> trainingCodeBlocks = new Vector<double[][]>();
 
-        // the average block is the first code block
         double[][] avgBlock = ComputeAverageVector(trainingData);
         trainingCodeBlocks.add(avgBlock);
 
         while(trainingCodeBlocks.size() < numCodeblocks) {
-            // split the code blocks into 2 blocks
-            trainingCodeBlocks = SplitCodebook(trainingCodeBlocks);
-            // update the code blocks with the new blocks
+            trainingCodeBlocks = SplitCodebook(trainingCodeBlocks, YUV, channel);
             trainingCodeBlocks = UpdateCentroids(ComputeQuantRegions(trainingData, trainingCodeBlocks), trainingCodeBlocks);
         }
 
-        // keep updating the codebook until convergence
-        // where convergence is determined by the threshold value
         double prevDistortion = 0.0;
         double currDistortion = ComputeDistortion(trainingData, trainingCodeBlocks);
         while (!CheckConvergence(prevDistortion, currDistortion, threshold)) {
@@ -200,19 +188,12 @@ public class LBGVecQuant {
             currDistortion = ComputeDistortion(trainingData, trainingCodeBlocks);
         }
 
-        // assign the final code blocks to the codebook
         for (int i = 0; i < trainingCodeBlocks.size(); i++) {
             codebook[i] = trainingCodeBlocks.get(i);
         }
         return codebook;
     }
     
-    // Encode
-    // create a new int array where each index represents the index of the image block in the data
-    // , and the value at that index is the index of the closest code block in the codebook
-    // , then return the int array
-    // , this is done by iterating over each block of image data, finding the closest code block in the codebook,
-    // and assigning the index of the closest code block to the int array at the index of the image block
     public static int[] Encode(double[][][] data, double[][][] codebook) {
 
         int[] encodedData = new int[data.length];
@@ -231,8 +212,6 @@ public class LBGVecQuant {
         return encodedData;
     }
     
-    // Decode
-    // create a new 3D array of doubles where each index represents the index of the image block in the data
     public static double[][][] Decode(int[] encodedData, double[][][] codebook) {
         double[][][] decodedData = new double[encodedData.length][][];
         for (int i = 0; i < encodedData.length; i++) {
@@ -242,30 +221,45 @@ public class LBGVecQuant {
     }
 
 
-    public static Vector<double[][][]> codebookRGB(Vector<double[][][]> rgbImages, int numCodeVectors, int dimension){
-        Vector<double[][][]> rgbValues = Util.extractRGB(rgbImages, dimension);
+    public static Vector<double[][][]> codebookRGB(Vector<double[][][]> rgbImages, int numCodeVectors, int dimension, Boolean YUV) {
+        Vector<double[][][]> rgbValues = Util.extractRGB(rgbImages, dimension, YUV);
 
-        // create a codebook for each color channel
+
         Vector<double[][][]> codebooks = new Vector<double[][][]>();
         for (int i = 0; i < rgbValues.size(); i++) {
             double[][][] codebook = new double[numCodeVectors][][];
-            codebook = codebook(rgbValues.get(i), numCodeVectors, 0.01);
+
+            long start = System.currentTimeMillis();
+
+            codebook = codebook(rgbValues.get(i), numCodeVectors, 0.01, YUV, i);
+
+            long end = System.currentTimeMillis();
+            long duration = end - start;
+            System.out.println("Time taken to create codebook " + i + ": " + duration + " ms");
+            
             codebooks.add(codebook);
+
+            System.out.println("Codebook " + i + " created with size: " + codebook.length);
         }
 
         return codebooks;
     }
 
 
-    // a polymorphism of codebookRGB for a single image
-    public static Vector<double[][][]> codebookRGB(double[][][] rgbImage, int numCodeVectors, int dimension){
-        Vector<double[][]> rgbChannels = Util.getImageRGB(rgbImage);
+    public static Vector<double[][][]> codebookRGB(double[][][] rgbImage, int numCodeVectors, int dimension, Boolean YUV){
+        Vector<double[][]> rgbChannels = Util.getImageRGB(rgbImage, YUV);
         Vector<double[][][]> codebooks = new Vector<double[][][]>();
 
 
-        for (double[][] channel : rgbChannels) {
-            double[][][] channelVectors = Util.splitImageVectors(channel, dimension);
-            double[][][] codebook = codebook(channelVectors, numCodeVectors, 0.01);
+        for (int i = 0; i < rgbChannels.size(); i++) {
+            double[][][] channelVectors = Util.splitImageVectors(rgbChannels.get(i), dimension);
+            int numCV = numCodeVectors;
+            if (YUV){
+                if (i == 1 || i == 2) {
+                    numCV = numCodeVectors / 4;
+                }
+            }
+            double[][][] codebook = codebook(channelVectors, numCV, 0.01, YUV, i);
             codebooks.add(codebook);
         }
 
@@ -274,105 +268,123 @@ public class LBGVecQuant {
     }
 
 
-    public static void multiImageCodebook(Vector<String> imagePaths, int dimension, int numCodeVectors){
-        // create a vector of image paths
+    public static void multiImageCodebook(Vector<String> imagePaths, int dimension, int numCodeVectors, Boolean YUV) {
         Vector<double[][][]> rgbImages = new Vector<double[][][]>();
         for (int i = 0; i < imagePaths.size(); i++) {
             double[][][] image = Util.readImage(imagePaths.get(i));
             rgbImages.add(image);
         }
 
-        // create a codebook for each color channel
-        Vector<double[][][]> codebooks = codebookRGB(rgbImages, numCodeVectors, dimension);
+        Vector<double[][][]> codebooks = codebookRGB(rgbImages, numCodeVectors, dimension, YUV);
 
-        // save the codebooks to files
         for (int i = 0; i < codebooks.size(); i++) {
             Util.storeCodebook("codebook" + i + ".txt", codebooks.get(i));
         }
     }
 
 
-    public static Vector<int[]> multiChannelEncoding(double[][][] image, Vector<double[][][]> codebooks, int dimension){
-        // split the image into 3 channels
-        Vector<double[][]> imageRGB = Util.getImageRGB(image);
+    public static Vector<int[]> multiChannelEncoding(double[][][] image, Vector<double[][][]> codebooks, int dimension, Boolean YUV){
+        
+        Vector<double[][]> imageRGB = Util.getImageRGB(image, YUV);
 
-        // split each channel into blocks of dimension x dimension
+
         Vector<double[][][]> channelBlocks = new Vector<double[][][]>();
         for (int i = 0; i < 3; i++){
             double[][][] channel = Util.splitImageVectors(imageRGB.get(i), dimension);
             channelBlocks.add(channel);
         }
 
-        // encode each channel using the corresponding codebook
         Vector<int[]> encodings = new Vector<int[]>();
         for (int i=0; i<channelBlocks.size(); i++){
             int[] encoding = Encode(channelBlocks.get(i), codebooks.get(i));
             encodings.add(encoding);
         }
 
-        // return the encodings
         return encodings;
     }
 
 
     public static Vector<double[][][]> multiChannelDecoding(Vector<int[]> encodings, Vector<double[][][]> codebooks){
-        // decode each channel using the corresponding codebook
         Vector<double[][][]> decodedChannels = new Vector<double[][][]>();
         for (int i=0; i<encodings.size(); i++){
             double[][][] decodedChannel = Decode(encodings.get(i), codebooks.get(i));
             decodedChannels.add(decodedChannel);
         }
 
-        // return the decoded channels
         return decodedChannels;
     }
 
 
-    public static void compressRGB(String imagePath, String outputPath, int dimension, int numCodeVectors){
-        // read the image
+    public static void compressRGB(String imagePath, String outputPath, int dimension, Vector<double[][][]> codebooks, Boolean YUV){
         double[][][] image = Util.readImage(imagePath);
         int height = image.length;
         int width = image[0].length;
 
-        // create a codebook for each color channel
-        Vector<double[][][]> codebooks = codebookRGB(image, numCodeVectors, dimension);
+        Vector<int[]> encodings = multiChannelEncoding(image, codebooks, dimension, YUV);
 
-        // encode the image using the codebooks
-        Vector<int[]> encodings = multiChannelEncoding(image, codebooks, dimension);
-
-        // store encodings to file
-        Util.saveEncodings(dimension, height, width, encodings, codebooks, outputPath);
+        Util.saveEncodings(dimension, height, width, encodings, outputPath);
 
     }
 
-    public static void decompressRGB(String encodedPath, String decodedPath){
+    public static void decompressRGB(String encodedPath, String decodedPath, Vector<double[][][]> codebooks, Boolean YUV){
         ArrayList<Object> encodedData = Util.readEncodings(encodedPath);
 
-        // read the encoded data
+        if (encodedData.isEmpty()) {
+            System.err.println("Failed to decompress: No data could be read from " + encodedPath);
+            return;
+        }
+
         int dimension = (int) encodedData.get(0);
-        int height = (int) encodedData.get(1);
-        int width = (int) encodedData.get(2);
-        Vector<double[][][]> codebooks = (Vector<double[][][]>) encodedData.get(3);
-        Vector<int[]> encodings = (Vector<int[]>) encodedData.get(4);
+        int width = (int) encodedData.get(1);
+        int height = (int) encodedData.get(2);
+        @SuppressWarnings("unchecked")
+        Vector<int[]> encodings = (Vector<int[]>) encodedData.get(3);
 
 
-        // decode each channel separately
         Vector<double[][][]> decodedChannels = multiChannelDecoding(encodings, codebooks);
 
 
-        // reconstruct each channel using the decoded vectors
         Vector<double[][]> reconstructedChannels = new Vector<double[][]>();
         for (int i=0; i<decodedChannels.size(); i++){
             double[][][] decodedChannel = decodedChannels.get(i);
-            reconstructedChannels.add(Util.reconstructImageFromBlocks(decodedChannel, height, width, dimension));
+            if (i==0){
+                reconstructedChannels.add(Util.reconstructImageFromBlocks(decodedChannel, dimension, height, width, false));
+            } else {
+                if (YUV){
+                    reconstructedChannels.add(Util.reconstructImageFromBlocks(decodedChannel, dimension, (int) Math.ceil(height/2), (int) Math.ceil(width/2), YUV));
+                } else {
+                    reconstructedChannels.add(Util.reconstructImageFromBlocks(decodedChannel, dimension, height, width, YUV));
+                }
+            }
+        }
+
+        for (int i=0; i<reconstructedChannels.size(); i++){
+            System.out.println("Reconstructed channel " + i + " dimensions: " + reconstructedChannels.get(i).length + "x" + reconstructedChannels.get(i)[0].length);
         }
 
 
-        // combine the decoded channels into a single image
-        double[][][] decodedImage = Util.reconstructImage(reconstructedChannels); 
+        double[][][] decodedImage = Util.reconstructImage(reconstructedChannels, YUV); 
+
+        // System.out.println("Decoded image dimensions: " + decodedImage.length + "x" + decodedImage[0].length + "x" + decodedImage[0][0].length);
+        // for (int i=0; i<decodedImage.length; i++){
+        //     for (int j=0; j<decodedImage[i].length; j++){
+        //         for (int k=0; k<decodedImage[i][j].length; k++){
+        //             System.out.print(decodedImage[i][j][k] + " ");
+        //         }
+        //         System.out.println();
+        //     }
+        // }
 
 
-        // write the decoded image to file
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                for (int c = 0; c < 3; c++) {
+                    decodedImage[y][x][c] = Math.max(0, Math.min(1, decodedImage[y][x][c]));
+                }
+            }
+        }
+
+
         Util.saveImage(decodedPath, decodedImage);
 
     }
